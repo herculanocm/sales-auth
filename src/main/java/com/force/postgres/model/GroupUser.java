@@ -18,7 +18,7 @@ import lombok.NoArgsConstructor;
 public class GroupUser {
 
     @Id
-    @Column(name = "gru_pk_uuid")
+    @Column(name = "gru_pk_uuid", updatable = false, nullable = false)
     private UUID id;
 
     @Column(name = "gru_tx_name", length =  255)
