@@ -35,7 +35,7 @@ public class GroupUserController {
 
     private static final Logger logger = Logger.getLogger(GroupUserController.class);
 
-    private GroupUserService groupUserService;
+    private final GroupUserService groupUserService;
     private Validator validator;
 
     @Inject
@@ -48,14 +48,15 @@ public class GroupUserController {
     @Path("/group-users/search")
     @Produces(MediaType.APPLICATION_JSON)
     public Response getGroupUserByQueryParams(
-        @QueryParam("page") @DefaultValue("" + DefaultValuesController.DEFAULT_PAGE) int page,
-        @QueryParam("size") @DefaultValue("" + DefaultValuesController.DEFAULT_SIZE) int size,
-        @QueryParam("id") UUID id, 
+        @QueryParam("page") @DefaultValue("" + DefaultValuesConstants.DEFAULT_PAGE) int page,
+        @QueryParam("size") @DefaultValue("" + DefaultValuesConstants.DEFAULT_SIZE) int size,
+        @QueryParam("id") String id, 
+        @QueryParam("companyRuleId") String companyRuleId, 
         @QueryParam("name") String name, 
         @QueryParam("enabled") Boolean enabled
         ) {
-        logger.info("Getting group user by query params: id=" + id + ", name=" + name + ", enabled=" + enabled + ", page=" + page + ", size=" + size);
-        PagedResult<GroupUser> pagedResult = groupUserService.getGroupUserByQueryParams(page, size, id, name, enabled);
+        logger.info("Getting group user by query params: id=" + id + ", companyRuleId=" + companyRuleId + ", name=" + name + ", enabled=" + enabled + ", page=" + page + ", size=" + size);
+        PagedResult<GroupUser> pagedResult = groupUserService.getGroupUserByQueryParams(page, size, UUID.fromString(id), UUID.fromString(companyRuleId), name, enabled);
 
         if (pagedResult.getData().isEmpty()) {
             return Response.status(Response.Status.NOT_FOUND).build();
@@ -113,21 +114,21 @@ public class GroupUserController {
 
     @DELETE
     @Path("/group-users/{id}")
-    public Response deleteGroupUser(@PathParam("id") UUID id) {
+    public Response deleteGroupUser(@PathParam("id") String id) {
         logger.info("Deleting group user with id: " + id);
 
         if (Optional.ofNullable(id).isEmpty()) {
             return Response.status(Response.Status.BAD_REQUEST).entity(new ResponseError("Id is required", null)).build();
         }
 
-        GroupUser groupUser = groupUserService.getGroupUserById(id).orElse(null);
+        GroupUser groupUser = groupUserService.getGroupUserById(UUID.fromString(id)).orElse(null);
 
         if (Optional.ofNullable(groupUser).isEmpty()) {
             return Response.status(Response.Status.NOT_FOUND).entity(new ResponseError("Group user not found", null)).build();
         }
 
         try {
-            groupUserService.deleteGroupUser(id);
+            groupUserService.deleteGroupUser(UUID.fromString(id));
 
             return Response.noContent().build();
         } catch (Throwable t) {

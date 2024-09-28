@@ -8,7 +8,7 @@ import org.jboss.logging.Logger;
 
 
 import com.force.postgres.model.GroupUser;
-import com.force.postgres.repository.GroupUserReporitory;
+import com.force.postgres.repository.GroupUserRepository;
 import com.force.util.PagedResult;
 import com.force.util.UuidUtil;
 
@@ -23,10 +23,10 @@ import jakarta.transaction.Transactional;
 public class GroupUserService {
     private static final Logger logger = Logger.getLogger(GroupUserService.class);
     
-    GroupUserReporitory groupUserReporitory;
+    private final GroupUserRepository groupUserReporitory;
 
     @Inject
-    public GroupUserService(GroupUserReporitory groupUserReporitory) {
+    public GroupUserService(GroupUserRepository groupUserReporitory) {
         this.groupUserReporitory = groupUserReporitory;
     }
 
@@ -56,10 +56,10 @@ public class GroupUserService {
         return groupUserReporitory.findByIdOptional(id);
     }
 
-    public PagedResult<GroupUser> getGroupUserByQueryParams(int page,int  size, UUID id, String name, Boolean enabled) {
+    public PagedResult<GroupUser> getGroupUserByQueryParams(int page,int  size, UUID id, UUID companyRuleId, String name, Boolean enabled) {
         logger.info("Getting group user by query params: id=" + id + ", name=" + name + ", enabled=" + enabled + ", page=" + page + ", size=" + size);
 
-        PanacheQuery<GroupUser> query = groupUserReporitory.findByQueryParams(id, name, enabled);
+        PanacheQuery<GroupUser> query = groupUserReporitory.findByQueryParams(id, companyRuleId, name, enabled);
         query.page(Page.of(page, size));
 
         List<GroupUser> data = query.list();

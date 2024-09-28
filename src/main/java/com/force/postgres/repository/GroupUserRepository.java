@@ -2,6 +2,7 @@ package com.force.postgres.repository;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import com.force.postgres.model.GroupUser;
 
@@ -11,18 +12,26 @@ import jakarta.enterprise.context.ApplicationScoped;
 import java.util.UUID;
 
 @ApplicationScoped
-public class GroupUserReporitory implements PanacheRepositoryBase<GroupUser, UUID> {
+public class GroupUserRepository implements PanacheRepositoryBase<GroupUser, UUID> {
 
-     public PanacheQuery<GroupUser> findByQueryParams(UUID id, String name, Boolean enabled) {
+     public PanacheQuery<GroupUser> findByQueryParams(UUID id, UUID companyRuleId, String name, Boolean enabled) {
         StringBuilder queryBuilder = new StringBuilder();
         Map<String, Object> params = new HashMap<>();
 
-        if (id != null) {
+        if (Optional.ofNullable(id).isPresent()) {
             queryBuilder.append("id = :id");
             params.put("id", id);
         }
 
-        if (name != null && !name.isEmpty()) {
+        if (Optional.ofNullable(companyRuleId).isPresent()) {
+            if (queryBuilder.length() > 0) {
+                queryBuilder.append(" and ");
+            }
+            queryBuilder.append("companyRule.id = :companyRuleId");
+            params.put("companyRuleId", companyRuleId);
+        }
+
+        if (Optional.ofNullable(name).isPresent() && !name.isEmpty()) {
             if (queryBuilder.length() > 0) {
                 queryBuilder.append(" and ");
             }
@@ -30,7 +39,7 @@ public class GroupUserReporitory implements PanacheRepositoryBase<GroupUser, UUI
             params.put("name", "%" + name + "%");
         }
 
-        if (enabled != null) {
+        if (Optional.ofNullable(enabled).isPresent()) {
             if (queryBuilder.length() > 0) {
                 queryBuilder.append(" and ");
             }

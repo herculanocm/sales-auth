@@ -26,6 +26,8 @@ public class GroupUserDTO {
 
     private Boolean enabled;
 
+    
+
     public GroupUser toEntity() {
         GroupUser groupUser = new GroupUser();
         

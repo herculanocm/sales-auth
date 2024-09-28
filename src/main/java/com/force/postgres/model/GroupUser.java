@@ -1,10 +1,14 @@
 package com.force.postgres.model;
 
 import java.util.UUID;
+import java.time.LocalDateTime;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -29,6 +33,22 @@ public class GroupUser {
 
     @Column(name = "gru_lg_enabled")
     private Boolean enabled;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+	@JoinColumn(name = "gru_fk_company_rule_uuid")
+	private CompanyRule companyRule;
+
+    @Column(name = "gru_dt_include", updatable = false, nullable = false)
+	private LocalDateTime dtInclude;
+
+	@Column(name = "gru_tx_user_include", length =  255, updatable = false, nullable = false)
+	private String userInclude;
+
+    @Column(name = "gru_dt_update", nullable = false)
+	private LocalDateTime dtUpdate;
+
+	@Column(name = "gru_tx_user_update", length =  255, nullable = false)
+	private String userUpdate;
 
     @Override
     public boolean equals(Object obj) {
@@ -57,9 +77,9 @@ public class GroupUser {
 
     @Override
     public String toString() {
-        return "GroupUser [id=" + id + ", name=" + name + ", description=" + description + ", enabled=" + enabled + "]";
+        return "GroupUser [id=" + id + ", name=" + name + ", description=" + description + ", enabled=" + enabled
+                + ", companyRule=" + companyRule + ", dtInclude=" + dtInclude + ", userInclude=" + userInclude
+                + ", dtUpdate=" + dtUpdate + ", userUpdate=" + userUpdate + "]";
     }
-
-    
     
 }

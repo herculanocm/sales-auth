@@ -76,3 +76,8 @@ Create your first JPA entity
 Easily start your REST Web Services
 
 [Related guide section...](https://quarkus.io/guides/getting-started-reactive#reactive-jax-rs-resources)
+
+
+docker run --network my-net --name some-redis -d redis redis-server --save 60 1 --loglevel warning
+
+docker run -it --network my-net --rm redis redis-cli -h some-redis
