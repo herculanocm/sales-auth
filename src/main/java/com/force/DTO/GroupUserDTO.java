@@ -2,9 +2,14 @@ package com.force.DTO;
 
 import java.util.UUID;
 import java.util.Optional;
+import java.time.LocalDateTime;
+
+import com.force.postgres.model.CompanyRule;
 import com.force.postgres.model.GroupUser;
+import com.force.util.ValidUUID;
 
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -18,6 +23,7 @@ public class GroupUserDTO {
     private UUID id;
 
     @NotNull(message = "This field is required")
+    @NotEmpty(message = "This field is required")
     @Size(max = 255, message = "This field must be less than 255 characters")
     private String name;
 
@@ -26,7 +32,18 @@ public class GroupUserDTO {
 
     private Boolean enabled;
 
-    
+    @NotNull(message = "This field is required")
+    @ValidUUID(message = "This field must be a valid UUID")
+    private String companyRuleId;
+
+	private LocalDateTime dtInclude;
+
+	private String userInclude;
+
+	private LocalDateTime dtUpdate;
+
+	private String userUpdate;
+
 
     public GroupUser toEntity() {
         GroupUser groupUser = new GroupUser();
@@ -34,6 +51,8 @@ public class GroupUserDTO {
         if (Optional.ofNullable(this.id).isPresent()) {
             groupUser.setId(this.id);
         }
+
+        groupUser.setCompanyRule(new CompanyRule(UUID.fromString(this.companyRuleId)));
 
         groupUser.setName(this.name.trim().toUpperCase());
         groupUser.setDescription(this.description);

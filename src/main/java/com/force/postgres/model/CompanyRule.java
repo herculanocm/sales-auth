@@ -43,6 +43,10 @@ public class CompanyRule {
 	@Column(name = "cpr_tx_user_update", length =  255, nullable = false)
 	private String userUpdate;
 
+    public CompanyRule(UUID id) {
+        this.id = id;
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (this == obj)

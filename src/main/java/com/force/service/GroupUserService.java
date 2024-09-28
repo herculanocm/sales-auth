@@ -3,10 +3,12 @@ package com.force.service;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.time.LocalDateTime;
 
 import org.jboss.logging.Logger;
 
-
+import com.aayushatharva.brotli4j.common.annotations.Local;
+import com.force.postgres.model.CompanyRule;
 import com.force.postgres.model.GroupUser;
 import com.force.postgres.repository.GroupUserRepository;
 import com.force.util.PagedResult;
@@ -36,13 +38,44 @@ public class GroupUserService {
     }
 
     @Transactional
-    public GroupUser savGroupUser(GroupUser groupUser) {
+    public GroupUser saveGroupUser(GroupUser groupUser) {
         logger.info("Saving group user: " + groupUser);
         if (Optional.ofNullable(groupUser.getId()).isEmpty()) {
             groupUser.setId(UuidUtil.generateUuidV7());
         }
+
+        groupUser.setDtInclude(LocalDateTime.now());
+        groupUser.setUserInclude("user");
+        groupUser.setDtUpdate(LocalDateTime.now());
+        groupUser.setUserUpdate("user");
+
         groupUserReporitory.persist(groupUser);
         return groupUser;
+    }
+
+    @Transactional
+    public GroupUser updateGroupUser(GroupUser groupUser) {
+        logger.info("Update group user: " + groupUser);
+            groupUser.setDtUpdate(LocalDateTime.now());
+            groupUser.setUserUpdate("user");
+            groupUserReporitory.persist(groupUser);
+            return groupUser;
+    }
+
+    @Transactional
+    public Optional<GroupUser> optUpdateGroupUser(GroupUser groupUser) {
+        logger.info("Update group user: " + groupUser);
+        
+        Optional<GroupUser> existingGroupUser = groupUserReporitory.findByIdOptional(groupUser.getId());
+        if (existingGroupUser.isPresent()) {
+            existingGroupUser.get().setDtUpdate(LocalDateTime.now());
+            existingGroupUser.get().setUserUpdate("user");
+    
+            groupUserReporitory.persist(existingGroupUser.get());
+            return Optional.of(groupUser);
+        }
+
+       return Optional.empty();
     }
 
     @Transactional

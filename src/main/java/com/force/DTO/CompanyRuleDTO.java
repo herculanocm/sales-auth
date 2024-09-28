@@ -2,6 +2,7 @@ package com.force.DTO;
 
 import com.force.postgres.model.CompanyRule;
 
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -20,6 +21,7 @@ public class CompanyRuleDTO {
     private UUID id;
 
     @NotNull(message = "This field is required")
+    @NotEmpty(message = "This field is required")
     @Size(max = 255, message = "This field must be less than 255 characters")
     private String name;
 

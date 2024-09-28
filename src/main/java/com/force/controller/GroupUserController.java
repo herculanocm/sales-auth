@@ -9,6 +9,7 @@ import org.jboss.logging.Logger;
 import com.force.DTO.GroupUserDTO;
 import com.force.DTO.ResponseError;
 import com.force.postgres.model.GroupUser;
+import com.force.service.CompanyRuleService;
 import com.force.service.GroupUserService;
 import com.force.util.PagedResult;
 
@@ -36,12 +37,14 @@ public class GroupUserController {
     private static final Logger logger = Logger.getLogger(GroupUserController.class);
 
     private final GroupUserService groupUserService;
+    private final CompanyRuleService companyRuleService;
     private Validator validator;
 
     @Inject
-    public GroupUserController(GroupUserService groupUserService, Validator validator) {
+    public GroupUserController(GroupUserService groupUserService, Validator validator, CompanyRuleService companyRuleService) {
         this.groupUserService = groupUserService;
         this.validator = validator;
+        this.companyRuleService = companyRuleService;
     }
 
     @GET
@@ -84,8 +87,12 @@ public class GroupUserController {
             return ResponseError.createFromValidation(violations).withStatusCode(ResponseError.UNPROCESSABLE_ENTITY_STATUS);
         }
 
-        GroupUser returnEntity = groupUserService.savGroupUser(groupUserDTO.toEntity());
-        return Response.status(Response.Status.CREATED).entity(returnEntity).build();
+        if (!companyRuleService.existsCompanyRule(UUID.fromString(groupUserDTO.getCompanyRuleId()))) {
+            return Response.status(Response.Status.NOT_FOUND).entity(new ResponseError("Company rule not found", null)).build();
+        }
+
+        GroupUser returnEntity = groupUserService.saveGroupUser(groupUserDTO.toEntity());
+        return Response.status(Response.Status.CREATED).entity(groupUserService.getGroupUserById(returnEntity.getId())).build();
     }
 
     @PUT
@@ -100,7 +107,11 @@ public class GroupUserController {
             return ResponseError.createFromValidation(violations).withStatusCode(ResponseError.UNPROCESSABLE_ENTITY_STATUS);
         } else if (Optional.ofNullable(groupUserDTO.getId()).isEmpty()) {
             return Response.status(Response.Status.BAD_REQUEST).entity(new ResponseError("Id is required", null)).build();
-        }   
+        }
+        
+        if (!companyRuleService.existsCompanyRule(UUID.fromString(groupUserDTO.getCompanyRuleId()))) {
+            return Response.status(Response.Status.NOT_FOUND).entity(new ResponseError("Company rule not found", null)).build();
+        }
 
         GroupUser groupUser = groupUserService.getGroupUserById(groupUserDTO.getId()).orElse(null);
 
@@ -108,8 +119,8 @@ public class GroupUserController {
             return Response.status(Response.Status.NOT_FOUND).entity(new ResponseError("Group user not found", null)).build();
         }
 
-        GroupUser returnEntity = groupUserService.savGroupUser(groupUserDTO.toEntity());
-        return Response.ok(returnEntity).build();
+        GroupUser returnEntity = groupUserService.updateGroupUser(groupUserDTO.toEntity());
+        return Response.status(Response.Status.ACCEPTED).entity(groupUserService.getGroupUserById(returnEntity.getId())).build();
     }
 
     @DELETE
