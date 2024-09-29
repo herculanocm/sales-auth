@@ -7,6 +7,7 @@ import com.force.DTO.ResponseError;
 import com.force.postgres.model.CompanyRule;
 import com.force.service.CompanyRuleService;
 import com.force.util.PagedResult;
+import com.force.util.ValidUUID;
 
 import jakarta.validation.Validator;
 import jakarta.ws.rs.Path;
@@ -16,6 +17,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.Optional;
 
+import jakarta.inject.Inject;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
@@ -38,6 +40,7 @@ public class CompanyRuleController {
     private final CompanyRuleService companyRuleService;
     private final Validator validator;
 
+    @Inject
     public CompanyRuleController(CompanyRuleService companyRuleService, Validator validator) {
         this.companyRuleService = companyRuleService;
         this.validator = validator;
@@ -87,7 +90,7 @@ public class CompanyRuleController {
     @Path("/company-rules/{id}")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
-    public Response updateCompanyRule(@PathParam("id") String id, @NotNull @Valid CompanyRuleDTO companyRuleDTO) {
+    public Response updateCompanyRule(@PathParam("id") @ValidUUID(message = "This field must be a valid UUID") String id, @NotNull @Valid CompanyRuleDTO companyRuleDTO) {
         logger.info("Updating company rule with id: " + id);
 
         Set<ConstraintViolation<CompanyRuleDTO>> violations = validator.validate(companyRuleDTO);

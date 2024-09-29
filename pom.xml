@@ -34,6 +34,7 @@
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-rest</artifactId>
         </dependency>
+
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-rest-jackson</artifactId>
@@ -83,7 +84,7 @@
             <artifactId>quarkus-jsonb</artifactId>
         </dependency>
 
-        <!-- https://mvnrepository.com/artifact/io.quarkus/quarkus-smallrye-jwt -->
+        <!-- https://mvnrepository.com/artifact/io.quarkus/quarkus-smallrye-jwt 
 <dependency>
     <groupId>io.quarkus</groupId>
     <artifactId>quarkus-smallrye-jwt</artifactId>
@@ -93,6 +94,31 @@
     <groupId>io.quarkus</groupId>
     <artifactId>quarkus-smallrye-jwt-build</artifactId>
 </dependency>
+
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-security</artifactId>
+        </dependency>
+
+-->
+    <dependency>
+        <groupId>io.jsonwebtoken</groupId>
+        <artifactId>jjwt-api</artifactId>
+        <version>0.11.5</version>
+    </dependency>
+    <dependency>
+        <groupId>io.jsonwebtoken</groupId>
+        <artifactId>jjwt-impl</artifactId>
+        <version>0.11.5</version>
+        <scope>runtime</scope>
+    </dependency>
+    <dependency>
+        <groupId>io.jsonwebtoken</groupId>
+        <artifactId>jjwt-jackson</artifactId>
+        <version>0.11.5</version>
+        <scope>runtime</scope>
+    </dependency>
+
 
     </dependencies>
 

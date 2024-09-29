@@ -2,16 +2,19 @@ package com.force.controller;
 
 
 import java.util.Set;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.jboss.logging.Logger;
 
 import com.force.DTO.GroupUserDTO;
 import com.force.DTO.ResponseError;
+import com.force.DTO.mapper.GroupUserMapper;
 import com.force.postgres.model.GroupUser;
 import com.force.service.CompanyRuleService;
 import com.force.service.GroupUserService;
 import com.force.util.PagedResult;
+import com.force.util.ValidUUID;
 
 import jakarta.inject.Inject;
 import jakarta.validation.ConstraintViolation;
@@ -36,6 +39,9 @@ public class GroupUserController {
 
     private static final Logger logger = Logger.getLogger(GroupUserController.class);
 
+    private static final String ENTITY_NAME = "GroupUser";
+    private static final String COMPANY_NAME = "Company";
+
     private final GroupUserService groupUserService;
     private final CompanyRuleService companyRuleService;
     private Validator validator;
@@ -53,17 +59,19 @@ public class GroupUserController {
     public Response getGroupUserByQueryParams(
         @QueryParam("page") @DefaultValue("" + DefaultValuesConstants.DEFAULT_PAGE) int page,
         @QueryParam("size") @DefaultValue("" + DefaultValuesConstants.DEFAULT_SIZE) int size,
-        @QueryParam("id") String id, 
-        @QueryParam("companyRuleId") String companyRuleId, 
-        @QueryParam("name") String name, 
-        @QueryParam("enabled") Boolean enabled
+        @QueryParam("id") Optional<String> id, 
+        @QueryParam("companyRuleId") Optional<String> companyRuleId, 
+        @QueryParam("name") Optional<String> name, 
+        @QueryParam("enabled") Optional<Boolean> enabled
         ) {
         logger.info("Getting group user by query params: id=" + id + ", companyRuleId=" + companyRuleId + ", name=" + name + ", enabled=" + enabled + ", page=" + page + ", size=" + size);
-        PagedResult<GroupUser> pagedResult = groupUserService.getGroupUserByQueryParams(page, size, UUID.fromString(id), UUID.fromString(companyRuleId), name, enabled);
+        PagedResult<GroupUserDTO> pagedResult = groupUserService.getGroupUserByQueryParams(page, size, id, companyRuleId, name, enabled);
 
         if (pagedResult.getData().isEmpty()) {
             return Response.status(Response.Status.NOT_FOUND).build();
         }
+
+        
         return Response.ok(pagedResult).build();
     }
 
@@ -72,7 +80,9 @@ public class GroupUserController {
     @Produces(MediaType.APPLICATION_JSON)
     public Response getAllGroupUsers() {
         logger.info("Getting all group users");
-        return Response.ok(groupUserService.getAllGroupUsers()).build();
+        List<GroupUser> groupUsers = groupUserService.getAllGroupUsers();
+        List<GroupUserDTO> groupUserDTOs = GroupUserMapper.toDTO(groupUsers);
+        return Response.ok(groupUserDTOs).build();
     }
 
     @POST
@@ -88,39 +98,43 @@ public class GroupUserController {
         }
 
         if (!companyRuleService.existsCompanyRule(UUID.fromString(groupUserDTO.getCompanyRuleId()))) {
-            return Response.status(Response.Status.NOT_FOUND).entity(new ResponseError("Company rule not found", null)).build();
+            return Response.status(Response.Status.NOT_FOUND).entity(new ResponseError(String.format("%s not found", COMPANY_NAME), null)).build();
         }
 
-        GroupUser returnEntity = groupUserService.saveGroupUser(groupUserDTO.toEntity());
-        return Response.status(Response.Status.CREATED).entity(groupUserService.getGroupUserById(returnEntity.getId())).build();
+        groupUserDTO = groupUserService.saveGroupUserDTO(groupUserDTO);
+        return Response.status(Response.Status.CREATED).entity(groupUserDTO).build();
     }
 
     @PUT
-    @Path("/group-users")
+    @Path("/group-users/{id}")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
-    public Response updateGroupUser(@NotNull @Valid GroupUserDTO groupUserDTO) {
+    public Response updateGroupUser(
+        @PathParam("id") @ValidUUID(message = "This field must be a valid UUID") String id, 
+        @NotNull @Valid GroupUserDTO groupUserDTO) {
         logger.info("Updating group user: " + groupUserDTO);
 
         Set<ConstraintViolation<GroupUserDTO>> violations = validator.validate(groupUserDTO);
         if (!violations.isEmpty()) {
             return ResponseError.createFromValidation(violations).withStatusCode(ResponseError.UNPROCESSABLE_ENTITY_STATUS);
-        } else if (Optional.ofNullable(groupUserDTO.getId()).isEmpty()) {
-            return Response.status(Response.Status.BAD_REQUEST).entity(new ResponseError("Id is required", null)).build();
+        } 
+
+        if (!groupUserService.existsGroupUser(UUID.fromString(id))) {
+            return Response.status(Response.Status.NOT_FOUND).entity(new ResponseError(String.format("%s not found", ENTITY_NAME), null)).build();
         }
         
         if (!companyRuleService.existsCompanyRule(UUID.fromString(groupUserDTO.getCompanyRuleId()))) {
-            return Response.status(Response.Status.NOT_FOUND).entity(new ResponseError("Company rule not found", null)).build();
+            return Response.status(Response.Status.NOT_FOUND).entity(new ResponseError(String.format("%s not found", COMPANY_NAME), null)).build();
         }
 
-        GroupUser groupUser = groupUserService.getGroupUserById(groupUserDTO.getId()).orElse(null);
+        groupUserDTO.setId(UUID.fromString(id));
 
-        if (Optional.ofNullable(groupUser).isEmpty()) {
-            return Response.status(Response.Status.NOT_FOUND).entity(new ResponseError("Group user not found", null)).build();
+        Optional<GroupUserDTO> updatedGroupUser = groupUserService.optUpdateGroupUserDTO(groupUserDTO);
+        if (updatedGroupUser.isEmpty()) {
+            return Response.status(Response.Status.NOT_FOUND).entity(new ResponseError(String.format("%s not found", ENTITY_NAME), null)).build();
         }
 
-        GroupUser returnEntity = groupUserService.updateGroupUser(groupUserDTO.toEntity());
-        return Response.status(Response.Status.ACCEPTED).entity(groupUserService.getGroupUserById(returnEntity.getId())).build();
+        return Response.ok(updatedGroupUser.get()).build();
     }
 
     @DELETE

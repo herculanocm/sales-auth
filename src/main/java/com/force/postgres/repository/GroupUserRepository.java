@@ -14,37 +14,37 @@ import java.util.UUID;
 @ApplicationScoped
 public class GroupUserRepository implements PanacheRepositoryBase<GroupUser, UUID> {
 
-     public PanacheQuery<GroupUser> findByQueryParams(UUID id, UUID companyRuleId, String name, Boolean enabled) {
+     public PanacheQuery<GroupUser> findByQueryParams(Optional<String> id, Optional<String> companyRuleId, Optional<String> name, Optional<Boolean> enabled) {
         StringBuilder queryBuilder = new StringBuilder();
         Map<String, Object> params = new HashMap<>();
 
-        if (Optional.ofNullable(id).isPresent()) {
+        if (id.isPresent()) {
             queryBuilder.append("id = :id");
-            params.put("id", id);
+            params.put("id", UUID.fromString(id.get()));
         }
 
-        if (Optional.ofNullable(companyRuleId).isPresent()) {
+        if (companyRuleId.isPresent()) {
             if (queryBuilder.length() > 0) {
                 queryBuilder.append(" and ");
             }
             queryBuilder.append("companyRule.id = :companyRuleId");
-            params.put("companyRuleId", companyRuleId);
+            params.put("companyRuleId", UUID.fromString(companyRuleId.get()));
         }
 
-        if (Optional.ofNullable(name).isPresent() && !name.isEmpty()) {
+        if (name.isPresent() && !name.isEmpty()) {
             if (queryBuilder.length() > 0) {
                 queryBuilder.append(" and ");
             }
             queryBuilder.append("name like :name");
-            params.put("name", "%" + name + "%");
+            params.put("name", "%" + name.get() + "%");
         }
 
-        if (Optional.ofNullable(enabled).isPresent()) {
+        if (enabled.isPresent()) {
             if (queryBuilder.length() > 0) {
                 queryBuilder.append(" and ");
             }
             queryBuilder.append("enabled = :enabled");
-            params.put("enabled", enabled);
+            params.put("enabled", enabled.get());
         }
 
         if (queryBuilder.length() > 0) {
