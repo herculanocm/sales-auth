@@ -55,7 +55,8 @@ public class AuthController {
         }
 
         boolean rememberMe = (loginDTO.getRememberMe() == null) ? false : loginDTO.getRememberMe();
-        JWTTokenReturnDTO jwtTokenReturnDTO = jwtProvider.generateTokenByUsernameAndCompanyId(loginDTO.getUsername(), loginDTO.getCompanyRuleId(), rememberMe);
+        JWTTokenReturnDTO jwtTokenReturnDTO = jwtProvider.generateTokenByUsernameAndCompanyId(loginDTO.getUsername(), loginDTO.getCompanyId(), rememberMe);
+        logger.debug("JWT Token Return DTO: " + jwtTokenReturnDTO);
 
         return Response.ok(jwtTokenReturnDTO).build();
     }

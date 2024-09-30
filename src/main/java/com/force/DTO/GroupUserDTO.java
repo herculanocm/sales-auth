@@ -25,7 +25,7 @@ public class GroupUserDTO {
     private UUID id;
 
     @NotNull(message = "This field is required")
-    @NotEmpty(message = "This field is required")
+    @NotEmpty(message = "This field must not be empty")
     @Size(max = 255, message = "This field must be less than 255 characters")
     private String name;
 
@@ -35,6 +35,7 @@ public class GroupUserDTO {
     private Boolean enabled;
 
     @NotNull(message = "This field is required")
+    @NotEmpty(message = "This field must not be empty")
     @ValidUUID(message = "This field must be a valid UUID")
     private String companyRuleId;
 

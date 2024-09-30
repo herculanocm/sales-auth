@@ -64,6 +64,12 @@ public class JWTFilter implements ContainerRequestFilter {
     public void filter(ContainerRequestContext requestContext) throws IOException {
         // Extract the Authorization header from the request
         logger.info("Request URI: " + requestContext.getUriInfo().getRequestUri());
+
+        if (requestContext.getUriInfo().getPath().equals("/api/v1/authenticate")) {
+            return;
+        }
+
+
         String authHeader = requestContext.getHeaderString(HttpHeaders.AUTHORIZATION);
 
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
