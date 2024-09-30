@@ -16,7 +16,7 @@ import com.force.util.UuidUtil;
 
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import io.quarkus.panache.common.Page;
-
+import io.quarkus.security.identity.SecurityIdentity;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
@@ -26,10 +26,12 @@ public class GroupUserService {
     private static final Logger logger = Logger.getLogger(GroupUserService.class);
     
     private final GroupUserRepository groupUserReporitory;
+    private final SecurityIdentity securityIdentity;
 
     @Inject
-    public GroupUserService(GroupUserRepository groupUserReporitory) {
+    public GroupUserService(GroupUserRepository groupUserReporitory, SecurityIdentity securityIdentity) {
         this.groupUserReporitory = groupUserReporitory;
+        this.securityIdentity = securityIdentity;
     }
 
     public List<GroupUser> getAllGroupUsers() {
@@ -120,6 +122,7 @@ public class GroupUserService {
 
     public PagedResult<GroupUserDTO> getGroupUserByQueryParams(int page,int  size, Optional<String> id, Optional<String> companyRuleId, Optional<String> name, Optional<Boolean> enabled) {
         logger.info("Getting group user by query params: id=" + id + ", name=" + name + ", enabled=" + enabled + ", page=" + page + ", size=" + size);
+        logger.info("User: " + securityIdentity.getPrincipal().getName());
 
         PanacheQuery<GroupUser> query = groupUserReporitory.findByQueryParams(id, companyRuleId, name, enabled);
         query.page(Page.of(page, size));
