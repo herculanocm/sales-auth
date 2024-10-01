@@ -10,6 +10,7 @@ import com.force.DTO.ResponseError;
 import com.force.security.AuthService;
 import com.force.security.jwt.JWTProvider;
 
+import jakarta.annotation.security.PermitAll;
 import jakarta.inject.Inject;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Valid;
@@ -23,6 +24,7 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.Response.Status;
 
+@PermitAll
 @Path("/api/v1")
 public class AuthController {
     private static final Logger logger = Logger.getLogger(AuthController.class);

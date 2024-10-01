@@ -16,6 +16,7 @@ import com.force.service.GroupUserService;
 import com.force.util.PagedResult;
 import com.force.util.ValidUUID;
 
+import jakarta.annotation.security.PermitAll;
 import jakarta.inject.Inject;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Valid;

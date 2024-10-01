@@ -1,163 +1,74 @@
-package com.force.security.jwt;
-
-import java.io.IOException;
-import java.security.PublicKey;
-import java.util.Set;
-import java.util.stream.Collectors;
-import java.security.Principal;
+package com.force.security;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.force.security.CustomSecurityIdentity;
-import com.force.security.JwtIdentityProvider;
-import com.force.service.JWTCacheService;
-
-import java.util.Arrays;
-import java.util.Base64;
+import java.security.PublicKey;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.Arrays;
+import java.util.Base64;
+
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.force.security.jwt.JWTProvider;
+import com.force.security.jwt.JWTStatusError;
+import com.force.security.jwt.JWTStatusFilter;
+import com.force.service.JWTCacheService;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.JwtParser;
 import io.jsonwebtoken.Jwts;
-import io.quarkus.security.credential.Credential;
+import io.quarkus.security.identity.AuthenticationRequestContext;
+import io.quarkus.security.identity.IdentityProvider;
 import io.quarkus.security.identity.SecurityIdentity;
-import io.quarkus.security.identity.SecurityIdentityAugmentor;
-import jakarta.annotation.Priority;
-import jakarta.enterprise.context.RequestScoped;
+import io.quarkus.security.identity.request.TokenAuthenticationRequest;
+import io.smallrye.mutiny.Uni;
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import jakarta.ws.rs.ext.Provider;
-import jakarta.ws.rs.Priorities;
-import jakarta.ws.rs.container.ContainerRequestContext;
-import jakarta.ws.rs.container.ContainerRequestFilter;
-import jakarta.ws.rs.core.HttpHeaders;
-import jakarta.ws.rs.core.Response;
-import jakarta.ws.rs.core.SecurityContext;
 
-@Provider
-@Priority(Priorities.AUTHENTICATION)
-@RequestScoped
-public class JWTFilter implements ContainerRequestFilter {
 
-    private static final Logger logger = Logger.getLogger(JWTFilter.class);
+@ApplicationScoped
+public class JwtIdentityProvider implements IdentityProvider<TokenAuthenticationRequest> {
 
-    private final JWTCacheService jwtService;
-
-    private final Boolean rolesFromJwt;
-
-    private final ObjectMapper mapper;
-
-    private final JWTProvider jwtProvider;
-
-    private final SecurityIdentityAugmentor securityIdentityAugmentor;
-
-    private final SecurityContext securityContext;
-
-    private final JwtIdentityProvider jwtIdentityProvider;
+     private static final Logger logger = Logger.getLogger(JwtIdentityProvider.class);
 
     @Inject
-    public JWTFilter(
-            JWTCacheService jwtService,
-            @ConfigProperty(name = "sales.security.roles-from-jwt", defaultValue = "false") Boolean rolesFromJwt,
-            ObjectMapper mapper,
-            JWTProvider jwtProvider,
-            SecurityIdentityAugmentor securityIdentityAugmentor,
-            SecurityContext securityContext,
-            JwtIdentityProvider jwtIdentityProvider
-            ) {
-        this.jwtService = jwtService;
-        this.rolesFromJwt = rolesFromJwt;
-        this.mapper = mapper;
-        this.jwtProvider = jwtProvider;
-        this.securityIdentityAugmentor = securityIdentityAugmentor;
-        this.securityContext = securityContext;
-        this.jwtIdentityProvider = jwtIdentityProvider;
+    private JWTCacheService jwtService;
+
+    @ConfigProperty(name = "sales.security.roles-from-jwt", defaultValue = "false") Boolean rolesFromJwt;
+
+    @Inject
+    private ObjectMapper mapper;
+
+    @Inject
+    private JWTProvider jwtProvider;
+
+    @Override
+    public Class<TokenAuthenticationRequest> getRequestType() {
+        return TokenAuthenticationRequest.class;
     }
 
     @Override
-    public void filter(ContainerRequestContext requestContext) throws IOException {
-        // Extract the Authorization header from the request
-        logger.info("Request URI: " + requestContext.getUriInfo().getRequestUri());
+    public Uni<SecurityIdentity> authenticate(TokenAuthenticationRequest request,
+            AuthenticationRequestContext context) {
+            String token = request.getToken().getToken();
 
-        if (requestContext.getUriInfo().getPath().equals("/api/v1/authenticate")) {
-            return;
-        }
-
-
-        String authHeader = requestContext.getHeaderString(HttpHeaders.AUTHORIZATION);
-
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            String jwt = authHeader.substring("Bearer".length()).trim();
-            JWTStatusFilter jwtStatusFilter = getJWTStatusFilter(jwt);
+            JWTStatusFilter jwtStatusFilter = getJWTStatusFilter(token);
 
             if (jwtStatusFilter.getValid()) {
-   
-                Principal userPrincipal = () -> jwtStatusFilter.getUserId();
-                Set<String> roles = jwtStatusFilter.getPermissions();
-                Set<Credential> credentials = new HashSet<>();
-
-                SecurityIdentity customIdentity = new CustomSecurityIdentity(userPrincipal, roles, credentials);
-
-                logger.info("CustomIdentity: " + customIdentity.getPrincipal().getName());
-
-                 // Augment the SecurityIdentity
-                 securityIdentityAugmentor.augment(customIdentity, null).subscribe().with(identity -> {
-                    // Get the original SecurityContext
-                    SecurityContext originalContext = requestContext.getSecurityContext();
-
-                    // Create a new SecurityContext
-                    SecurityContext newSecurityContext = new SecurityContext() {
-                        @Override
-                        public Principal getUserPrincipal() {
-                            return identity.getPrincipal();
-                        }
-
-                        @Override
-                        public boolean isUserInRole(String role) {
-                            return identity.hasRole(role);
-                        }
-
-                        @Override
-                        public boolean isSecure() {
-                            return originalContext.isSecure();
-                        }
-
-                        @Override
-                        public String getAuthenticationScheme() {
-                            return "Bearer";
-                        }
-                    };
-
-                    securityContext.
-
-                    // Set the new SecurityContext
-                    requestContext.setSecurityContext(newSecurityContext);
-                });
-
+                CustomSecurityIdentity identity = new CustomSecurityIdentity(jwtStatusFilter);
+            return Uni.createFrom().item(identity);
             } else {
-                // If the token is invalid, abort the request with an error response
-                requestContext.abortWith(
-                        Response.status(Response.Status.UNAUTHORIZED)
-                                .header(HttpHeaders.CONTENT_TYPE, "application/json")
-                                .entity(jwtStatusFilter.getError())
-                                .build());
+                logger.error("JWT invalid: " + jwtStatusFilter.getError().getErrorMessage());
+                return Uni.createFrom().failure(new JwtAuthenticationException("Invalid JWT Token" , jwtStatusFilter));
             }
-        } else {
-            // If there's no Authorization header or it doesn't start with Bearer, abort the
-            // request
-            requestContext.abortWith(
-                    Response.status(Response.Status.UNAUTHORIZED)
-                            .header(HttpHeaders.CONTENT_TYPE, "text/plain")
-                            .entity("Missing or invalid Authorization header")
-                            .build());
-        }
     }
-    
 
     public JWTStatusFilter getJWTStatusFilter(String jwtToken) {
         // Initialize JWTStatusFilter
@@ -288,5 +199,5 @@ public class JWTFilter implements ContainerRequestFilter {
                     .build();
         }
     }
-
+    
 }
