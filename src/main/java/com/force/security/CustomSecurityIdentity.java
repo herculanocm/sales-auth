@@ -20,13 +20,15 @@ public class CustomSecurityIdentity implements SecurityIdentity {
     private Set<String> roles;
     private Set<Credential> credentials;
     private Map<String, Object> attributes;
+    private final Set<String> permissions;
 
     // Constructor with Principal and Roles
     public CustomSecurityIdentity(Principal principal, Set<String> roles, Set<Credential> credentials) {
         this.principal = principal;
         this.roles = Optional.ofNullable(roles).orElse(Collections.emptySet());
         this.credentials = credentials; // Initialize as empty
-        this.attributes = Collections.emptyMap();  // Initialize as empty
+        this.attributes = Collections.emptyMap(); // Initialize as empty
+        this.permissions = new HashSet<>();
     }
 
     // Constructor with JWTStatusFilter
@@ -37,10 +39,16 @@ public class CustomSecurityIdentity implements SecurityIdentity {
         this.principal = () -> userId;
 
         // Initialize roles, credentials, and attributes
-        //this.roles = Optional.ofNullable(jwtStatusFilter.getPermissions()).orElse(Collections.emptySet());
-        this.roles = new HashSet<>(Collections.singleton("ROLE_ADMIN"));
+        // this.roles =
+        // Optional.ofNullable(jwtStatusFilter.getPermissions()).orElse(Collections.emptySet());
+        this.roles = jwtStatusFilter.getRoles();
+        this.permissions = jwtStatusFilter.getPermissions();
+        this.attributes = jwtStatusFilter.getAttributes();
         this.credentials = Collections.emptySet(); // No credentials by default
-        this.attributes = Collections.emptyMap();  // No attributes by default
+    }
+
+    public Set<String> getPermissions() {
+        return permissions;
     }
 
     @Override
@@ -73,6 +81,18 @@ public class CustomSecurityIdentity implements SecurityIdentity {
                 .orElse(null);
     }
 
+    private boolean roleHasPermission(String role, String permission) {
+        // Implement logic to check if a role grants the specified permission
+        // This can be a lookup in a database, a configuration file, etc.
+        // For simplicity, we'll assume a hardcoded mapping here
+        switch (role) {
+            case "ROLE_ADMIN":
+                return true; // Admins have all permissions
+            default:
+                return false;
+        }
+    }
+
     @Override
     public Set<Credential> getCredentials() {
         return Collections.unmodifiableSet(this.credentials); // Return unmodifiable set
@@ -90,8 +110,17 @@ public class CustomSecurityIdentity implements SecurityIdentity {
 
     @Override
     public Uni<Boolean> checkPermission(Permission permission) {
-        // Implement permission checking logic if needed
-        // For now, always return true
-        return Uni.createFrom().item(true);
+        if (permissions.contains(permission.getName())) {
+            return Uni.createFrom().item(true);
+        }
+
+        // Optionally, check if any role grants the permission
+        for (String role : roles) {
+            if (roleHasPermission(role, permission.getName())) {
+                return Uni.createFrom().item(true);
+            }
+        }
+
+        return Uni.createFrom().item(false);
     }
 }

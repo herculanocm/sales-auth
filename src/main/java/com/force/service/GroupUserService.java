@@ -36,6 +36,11 @@ public class GroupUserService {
 
     public List<GroupUser> getAllGroupUsers() {
         logger.info("Getting all group users");
+
+
+
+
+        logger.info("User: " + securityIdentity.getPrincipal().getName());
         return groupUserReporitory.listAll();
     }
 
@@ -123,7 +128,28 @@ public class GroupUserService {
     public PagedResult<GroupUserDTO> getGroupUserByQueryParams(int page,int  size, Optional<String> id, Optional<String> companyRuleId, Optional<String> name, Optional<Boolean> enabled) {
         logger.info("Getting group user by query params: id=" + id + ", name=" + name + ", enabled=" + enabled + ", page=" + page + ", size=" + size);
         logger.info("User: " + securityIdentity.getPrincipal().getName());
+        logger.info("User: " + securityIdentity.getPrincipal());
+     
 
+       
+        if (securityIdentity == null) {
+            logger.error("SecurityIdentity is null");
+        } else {
+            logger.info("SecurityIdentity is not null");
+        }
+
+        if (securityIdentity.getPrincipal() == null) {
+            logger.error("Principal is null");
+        } else {
+            logger.info("Principal is not null");
+        }
+
+        if (securityIdentity.getPrincipal().getName() == null || securityIdentity.getPrincipal().getName().isEmpty()) {
+            logger.error("Principal name is null or empty");
+        } else {
+            logger.info("Principal name: " + securityIdentity.getPrincipal().getName());
+        }
+        
         PanacheQuery<GroupUser> query = groupUserReporitory.findByQueryParams(id, companyRuleId, name, enabled);
         query.page(Page.of(page, size));
 

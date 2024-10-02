@@ -1,5 +1,6 @@
 package com.force.security.jwt;
 
+import java.util.Map;
 import java.util.Set;
 
 import lombok.AllArgsConstructor;
@@ -16,7 +17,9 @@ public class JWTStatusFilter {
     private String userId;
     private String companyId;
     private Set<String> permissions;
+    private Set<String> roles;
     private String publicKey;
     private Boolean valid;
     private JWTStatusError error;
+    private Map<String, Object> attributes;
 }

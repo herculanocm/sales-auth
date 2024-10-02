@@ -15,12 +15,16 @@ import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
+import java.util.HashSet;
 
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 
 import io.jsonwebtoken.Jwts;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+
 
 @ApplicationScoped
 public class JWTProvider {
@@ -28,10 +32,15 @@ public class JWTProvider {
     private static final Logger logger = Logger.getLogger(JWTProvider.class);
 
     private final JWTCacheService jwtCacheService;
+    private final Boolean rolesFromJwt;
 
     @Inject
-    public JWTProvider(JWTCacheService jwtCacheService) {
+    public JWTProvider(
+        JWTCacheService jwtCacheService,
+        @ConfigProperty(name = "sales.security.roles-from-jwt", defaultValue = "false") Boolean rolesFromJwt
+        ) {
         this.jwtCacheService = jwtCacheService;
+        this.rolesFromJwt = rolesFromJwt;
     }
     
     public PrivateKey getPrivateKey(String base64PrivateKey) throws Exception {
@@ -79,6 +88,17 @@ public class JWTProvider {
         claims.put("aud", "force.com");
         claims.put("iat", issuedAt);
         claims.put("exp", expiration);
+
+        Set<String> permissions = new HashSet<>();
+
+        if (rolesFromJwt) {
+            permissions.add("ROLE_USER");
+            permissions.add("ROLE_ADMIN");
+            
+            claims.put("permissions", permissions);
+        } else {
+            claims.put("permissions", permissions);
+        }
 
         try {
             PrivateKey privateKey = getPrivateKey(base64PrivateKey);

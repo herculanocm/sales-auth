@@ -11,12 +11,12 @@ import com.force.DTO.GroupUserDTO;
 import com.force.DTO.ResponseError;
 import com.force.DTO.mapper.GroupUserMapper;
 import com.force.postgres.model.GroupUser;
+import com.force.security.PermissionsAllowed;
 import com.force.service.CompanyRuleService;
 import com.force.service.GroupUserService;
 import com.force.util.PagedResult;
 import com.force.util.ValidUUID;
 
-import jakarta.annotation.security.PermitAll;
 import jakarta.inject.Inject;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Valid;
@@ -54,9 +54,12 @@ public class GroupUserController {
         this.companyRuleService = companyRuleService;
     }
 
+    
     @GET
     @Path("/group-users/search")
     @Produces(MediaType.APPLICATION_JSON)
+    //@PermissionsAllowed({"read"})
+    //@PermissionsAllowed({"read"})
     public Response getGroupUserByQueryParams(
         @QueryParam("page") @DefaultValue("" + DefaultValuesConstants.DEFAULT_PAGE) int page,
         @QueryParam("size") @DefaultValue("" + DefaultValuesConstants.DEFAULT_SIZE) int size,

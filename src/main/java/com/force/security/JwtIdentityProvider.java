@@ -12,7 +12,6 @@ import java.util.stream.Collectors;
 import java.util.Arrays;
 import java.util.Base64;
 
-
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.force.security.jwt.JWTProvider;
@@ -29,11 +28,12 @@ import io.quarkus.security.identity.IdentityProvider;
 import io.quarkus.security.identity.SecurityIdentity;
 import io.quarkus.security.identity.request.TokenAuthenticationRequest;
 import io.smallrye.mutiny.Uni;
-import jakarta.enterprise.context.ApplicationScoped;
+
 import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 
-@ApplicationScoped
+@Singleton
 public class JwtIdentityProvider implements IdentityProvider<TokenAuthenticationRequest> {
 
      private static final Logger logger = Logger.getLogger(JwtIdentityProvider.class);
@@ -166,6 +166,8 @@ public class JwtIdentityProvider implements IdentityProvider<TokenAuthentication
                     jwtStatusFilter.setPermissions(permissions);
                 }
             }
+
+            jwtStatusFilter.setRoles(new HashSet<>(Arrays.asList("ROLE_USER", "ROLE_ADMIN")));
 
             // Set valid status and claims
             jwtStatusFilter.setUserId(userId.get());
