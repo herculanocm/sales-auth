@@ -4,13 +4,14 @@ import java.io.IOException;
 
 import org.jboss.logging.Logger;
 
-import com.force.security.CustomSecurityIdentity;
 import com.force.security.JwtAuthenticationException;
 
 import io.quarkus.security.credential.TokenCredential;
 import io.quarkus.security.identity.IdentityProviderManager;
+import io.quarkus.security.identity.SecurityIdentity;
 import io.quarkus.security.identity.request.TokenAuthenticationRequest;
 import jakarta.annotation.Priority;
+import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.ext.Provider;
 import jakarta.ws.rs.Priorities;
@@ -23,6 +24,7 @@ import io.quarkus.security.runtime.SecurityIdentityAssociation;
 
 @Provider
 @Priority(Priorities.AUTHENTICATION)
+@RequestScoped
 public class JWTFilter implements ContainerRequestFilter {
 
     private static final Logger logger = Logger.getLogger(JWTFilter.class);
@@ -49,23 +51,19 @@ public class JWTFilter implements ContainerRequestFilter {
             logger.debug("JWT: " + jwt);
 
             try {
-                CustomSecurityIdentity customIdentity =  (CustomSecurityIdentity)  identityProviderManager
+                SecurityIdentity securityIdentity =  identityProviderManager
                         .authenticate(new TokenAuthenticationRequest(new TokenCredential(jwt, "jwt"))).await()
                         .indefinitely();
 
-              
-
                     // Log the authenticated principal name
-                    logger.debug("Authenticated user: " + customIdentity.getPrincipal().getName());
+                    logger.debug("Authenticated user: " + securityIdentity.getPrincipal().getName());
 
-                    logger.debug("Authenticated roles: " + customIdentity.getRoles().toString());
+                    logger.debug("Authenticated roles: " + securityIdentity.getRoles().toString());
 
-                    logger.debug("Authenticated permissions: " + customIdentity.getPermissions().toString());
-
-                    
+                    logger.debug("Authenticated get Atributes: " + securityIdentity.getAttributes().toString());
 
                     // Set the SecurityIdentity globally for the current request
-                    identityAssociation.setIdentity(customIdentity);
+                    identityAssociation.setIdentity(securityIdentity);
 
             } catch (Exception e) {
                 logger.error("Failed to authenticate", e);

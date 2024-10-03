@@ -6,7 +6,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.HashSet;
+import java.util.HashMap;
 
 import com.force.security.jwt.JWTStatusFilter;
 
@@ -20,7 +20,6 @@ public class CustomSecurityIdentity implements SecurityIdentity {
     private Set<String> roles;
     private Set<Credential> credentials;
     private Map<String, Object> attributes;
-    private final Set<String> permissions;
 
     // Constructor with Principal and Roles
     public CustomSecurityIdentity(Principal principal, Set<String> roles, Set<Credential> credentials) {
@@ -28,27 +27,31 @@ public class CustomSecurityIdentity implements SecurityIdentity {
         this.roles = Optional.ofNullable(roles).orElse(Collections.emptySet());
         this.credentials = credentials; // Initialize as empty
         this.attributes = Collections.emptyMap(); // Initialize as empty
-        this.permissions = new HashSet<>();
     }
 
     // Constructor with JWTStatusFilter
     public CustomSecurityIdentity(JWTStatusFilter jwtStatusFilter) {
         String userId = jwtStatusFilter.getUserId();
-
-        // Set the principal using a lambda expression
         this.principal = () -> userId;
+        
+        this.roles = jwtStatusFilter.getRoles() != null
+        ? Collections.unmodifiableSet(jwtStatusFilter.getRoles())
+        : Collections.emptySet();
 
-        // Initialize roles, credentials, and attributes
-        // this.roles =
-        // Optional.ofNullable(jwtStatusFilter.getPermissions()).orElse(Collections.emptySet());
-        this.roles = jwtStatusFilter.getRoles();
-        this.permissions = jwtStatusFilter.getPermissions();
-        this.attributes = jwtStatusFilter.getAttributes();
-        this.credentials = Collections.emptySet(); // No credentials by default
-    }
+        Set<String> permissions = jwtStatusFilter.getPermissions() != null
+                ? Collections.unmodifiableSet(jwtStatusFilter.getPermissions())
+                : Collections.emptySet();
 
-    public Set<String> getPermissions() {
-        return permissions;
+        this.attributes = new HashMap<>();
+        attributes.put("permissions", permissions);
+        attributes.put("roles", this.roles);
+        attributes.put("userId", userId);
+
+        this.credentials = Collections.emptySet();
+
+        if (jwtStatusFilter.getAttributes() != null) {
+            attributes.putAll(jwtStatusFilter.getAttributes());
+        }
     }
 
     @Override
@@ -81,18 +84,6 @@ public class CustomSecurityIdentity implements SecurityIdentity {
                 .orElse(null);
     }
 
-    private boolean roleHasPermission(String role, String permission) {
-        // Implement logic to check if a role grants the specified permission
-        // This can be a lookup in a database, a configuration file, etc.
-        // For simplicity, we'll assume a hardcoded mapping here
-        switch (role) {
-            case "ROLE_ADMIN":
-                return true; // Admins have all permissions
-            default:
-                return false;
-        }
-    }
-
     @Override
     public Set<Credential> getCredentials() {
         return Collections.unmodifiableSet(this.credentials); // Return unmodifiable set
@@ -110,7 +101,9 @@ public class CustomSecurityIdentity implements SecurityIdentity {
 
     @Override
     public Uni<Boolean> checkPermission(Permission permission) {
-        if (permissions.contains(permission.getName())) {
+        // Retrieve permissions from attributes
+        Set<String> permissions = getAttribute("permissions");
+        if (permissions != null && permissions.contains(permission.getName())) {
             return Uni.createFrom().item(true);
         }
 
@@ -122,5 +115,15 @@ public class CustomSecurityIdentity implements SecurityIdentity {
         }
 
         return Uni.createFrom().item(false);
+    }
+
+    private boolean roleHasPermission(String role, String permission) {
+        // Implement logic to check if a role grants the specified permission
+        // For simplicity, we'll assume a hardcoded mapping here
+        if ("ROLE_ADMIN".equals(role)) {
+            return true; // Admins have all permissions
+        }
+        // Add additional role-permission mappings as needed
+        return false;
     }
 }
