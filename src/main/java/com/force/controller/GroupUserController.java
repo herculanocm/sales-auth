@@ -59,7 +59,7 @@ public class GroupUserController {
     @Path("/group-users/search")
     @Produces(MediaType.APPLICATION_JSON)
     //@PermissionsAllowed({"read"})
-    @PermissionsAllowed({"readu"})
+    @PermissionsAllowed({"read"})
     public Response getGroupUserByQueryParams(
         @QueryParam("page") @DefaultValue("" + DefaultValuesConstants.DEFAULT_PAGE) int page,
         @QueryParam("size") @DefaultValue("" + DefaultValuesConstants.DEFAULT_SIZE) int size,

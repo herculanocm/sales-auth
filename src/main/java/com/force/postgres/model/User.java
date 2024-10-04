@@ -49,6 +49,9 @@ public class User {
     @JsonIgnore
     private String activationKey;
 
+    @Column(name = "usr_lg_activated")
+    private Boolean activated;
+
     @Column(name = "usr_tx_reset_key", length =  255)
     @JsonIgnore
     private String resetKey;
