@@ -58,23 +58,18 @@ public class GroupUserController {
     @GET
     @Path("/group-users/search")
     @Produces(MediaType.APPLICATION_JSON)
-    //@PermissionsAllowed({"read"})
-    @PermissionsAllowed({"read"})
+    @PermissionsAllowed(roles = {"ROLE_USER"})
     public Response getGroupUserByQueryParams(
         @QueryParam("page") @DefaultValue("" + DefaultValuesConstants.DEFAULT_PAGE) int page,
         @QueryParam("size") @DefaultValue("" + DefaultValuesConstants.DEFAULT_SIZE) int size,
-        @QueryParam("id") Optional<String> id, 
+        @Valid @ValidUUID @QueryParam("id") String id, 
         @QueryParam("companyRuleId") Optional<String> companyRuleId, 
         @QueryParam("name") Optional<String> name, 
         @QueryParam("enabled") Optional<Boolean> enabled
         ) {
+        Optional<String> sid = Optional.ofNullable(id);
         logger.info("Getting group user by query params: id=" + id + ", companyRuleId=" + companyRuleId + ", name=" + name + ", enabled=" + enabled + ", page=" + page + ", size=" + size);
-        PagedResult<GroupUserDTO> pagedResult = groupUserService.getGroupUserByQueryParams(page, size, id, companyRuleId, name, enabled);
-
-        if (pagedResult.getData().isEmpty()) {
-            return Response.status(Response.Status.NOT_FOUND).build();
-        }
-
+        PagedResult<GroupUserDTO> pagedResult = groupUserService.getGroupUserByQueryParams(page, size, sid, companyRuleId, name, enabled);
         
         return Response.ok(pagedResult).build();
     }

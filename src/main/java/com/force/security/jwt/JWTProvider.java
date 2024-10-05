@@ -90,6 +90,13 @@ public class JWTProvider {
         claims.put("exp", expiration);
 
         Set<String> permissions = new HashSet<>();
+        Set<String> roles = new HashSet<>();
+
+        roles.add("ROLE_USER");
+        roles.add("ROLE_ADMIN");
+        roles.add("ROLE_ADMIN_SYSTEM");
+        claims.put("roles", roles);
+        
 
         if (rolesFromJwt) {
             permissions.add("ROLE_USER");

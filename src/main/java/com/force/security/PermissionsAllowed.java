@@ -13,5 +13,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 @Target({TYPE, METHOD})
 public @interface PermissionsAllowed {
-    @Nonbinding String[] value();
+    @Nonbinding String[] roles() default {};
+    @Nonbinding String[] permissions() default {};
+    @Nonbinding boolean inclusiveRole() default false;
+    @Nonbinding boolean inclusivePermission() default false;
 }
