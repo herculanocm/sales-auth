@@ -3,6 +3,7 @@ package com.force.controller;
 import org.jboss.logging.Logger;
 
 import com.force.DTO.CompanyRuleDTO;
+import com.force.DTO.GroupUserDTO;
 import com.force.DTO.RegisterUserDTO;
 import com.force.DTO.ResponseError;
 import com.force.postgres.model.CompanyRule;
@@ -55,6 +56,31 @@ public class UserController {
         this.userService = userService;
         this.validator = validator;
         this.companyRuleService = companyRuleService;
+    }
+
+    @GET
+    @Path("/users/search")
+    @Produces(MediaType.APPLICATION_JSON)
+    //@PermissionsAllowed(roles = {"ROLE_ADMIN_SYSTEM", "ROLE_ADMIN_COMPANY"})
+    public PagedResult<User> searchUsers(
+        @QueryParam("page") @DefaultValue("" + DefaultValuesConstants.DEFAULT_PAGE) int page,
+        @QueryParam("size") @DefaultValue("" + DefaultValuesConstants.DEFAULT_SIZE) int size,
+        @Valid @ValidUUID @QueryParam("id") String id, 
+        @Valid @ValidUUID @QueryParam("companyRuleId") String companyRuleId, 
+        @QueryParam("email") String email,
+        @QueryParam("firstName") String firstName,
+        @QueryParam("enabled") Boolean enabled,
+        @QueryParam("activated") Boolean activated
+    ) {
+        Optional<String> companyRuleIdOptional = Optional.ofNullable(companyRuleId);
+        Optional<String> emailOptional = Optional.ofNullable(email);
+        Optional<String> firstNameOptional = Optional.ofNullable(firstName);
+        Optional<String> idOptional = Optional.ofNullable(id);
+        Optional<Boolean> enabledOptional = Optional.ofNullable(enabled);
+        Optional<Boolean> activatedOptional = Optional.ofNullable(activated);
+        logger.info("Searching users with params: page=" + page + ", size=" + size + ", id=" + id + ", companyRuleId=" + companyRuleId + ", email=" + email + ", firstName=" + firstName + ", enabled=" + enabled + ", activated=" + activated);
+        PagedResult<User> pagedResult = userService.getUserByQueryParams(page, size, companyRuleIdOptional, emailOptional, firstNameOptional, idOptional, enabledOptional, activatedOptional);
+        return pagedResult;
     }
     
     @GET

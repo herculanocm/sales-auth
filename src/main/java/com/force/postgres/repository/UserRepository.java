@@ -16,7 +16,7 @@ import java.util.UUID;
 public class UserRepository implements PanacheRepositoryBase<User, UUID> {
     
     
-     public PanacheQuery<User> findByQueryParams(Optional<String> id, Optional<String> companyRuleId, Optional<String> email, Optional<Boolean> enabled) {
+     public PanacheQuery<User> findByQueryParams(Optional<String> id, Optional<String> companyRuleId, Optional<String> email, Optional<String> firstNameOptional, Optional<Boolean> enabled, Optional<Boolean> activated) {
         StringBuilder queryBuilder = new StringBuilder();
         Map<String, Object> params = new HashMap<>();
 
@@ -47,6 +47,22 @@ public class UserRepository implements PanacheRepositoryBase<User, UUID> {
             }
             queryBuilder.append("enabled = :enabled");
             params.put("enabled", enabled.get());
+        }
+
+        if (activated.isPresent()) {
+            if (queryBuilder.length() > 0) {
+                queryBuilder.append(" and ");
+            }
+            queryBuilder.append("activated = :activated");
+            params.put("activated", activated.get());
+        }
+
+        if (firstNameOptional.isPresent()) {
+            if (queryBuilder.length() > 0) {
+                queryBuilder.append(" and ");
+            }
+            queryBuilder.append("firstName like :firstName");
+            params.put("firstName", "%" + firstNameOptional.get() + "%");
         }
 
         if (queryBuilder.length() > 0) {

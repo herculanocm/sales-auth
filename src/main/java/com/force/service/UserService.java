@@ -6,6 +6,7 @@ import java.util.List;
 import java.time.LocalDateTime;
 
 import io.quarkus.elytron.security.common.BcryptUtil;
+import io.quarkus.hibernate.orm.panache.PanacheQuery;
 
 import org.jboss.logging.Logger;
 
@@ -13,11 +14,13 @@ import com.force.DTO.RegisterUserDTO;
 import com.force.postgres.model.CompanyRule;
 import com.force.postgres.model.User;
 import com.force.postgres.repository.UserRepository;
+import com.force.util.PagedResult;
 
 import io.quarkus.security.identity.SecurityIdentity;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
+import io.quarkus.panache.common.Page;
 
 @ApplicationScoped
 public class UserService {
@@ -104,6 +107,20 @@ public class UserService {
 
         user.setId(id);
         return user;
+    }
+
+    public PagedResult<User> getUserByQueryParams(int page, int size, Optional<String> companyRuleIdOptional,
+            Optional<String> emailOptional, Optional<String> firstNameOptional, Optional<String> idOptional, Optional<Boolean> enabledOptional, Optional<Boolean> activatedOptional) {
+        logger.info("Searching users with params: page=" + page + ", size=" + size + ", id=" + idOptional + ", companyRuleId=" + companyRuleIdOptional + ", email=" + emailOptional + ", firstName=" + firstNameOptional + ", enabled=" + enabledOptional + ", activated=" + activatedOptional);
+        PanacheQuery<User> query = userRepository.findByQueryParams(idOptional, companyRuleIdOptional, emailOptional, firstNameOptional, enabledOptional, activatedOptional);
+        query.page(Page.of(page, size));
+
+        List<User> data = query.list();
+        long totalElements = query.count();
+        int totalPages = query.pageCount();
+
+        
+        return new PagedResult<>((data), page, size, totalElements, totalPages);
     }
 
 }

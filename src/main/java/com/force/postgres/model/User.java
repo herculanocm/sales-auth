@@ -82,15 +82,15 @@ public class User {
     @Column(name = "usr_tx_user_update", length =  255, nullable = false)
     private String userUpdate;
 
-    // @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    // @Builder.Default
-    // @JsonIgnoreProperties("user")
-    // private Set<UserRole> roles = new HashSet<>();
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @Builder.Default
+    @JsonIgnoreProperties("user")
+    private Set<UserRole> roles = new HashSet<>();
 
-    // @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    // @Builder.Default
-    // @JsonIgnoreProperties("user")
-    // private Set<UserPermission> permissions = new HashSet<>();
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @Builder.Default
+    @JsonIgnoreProperties("user")
+    private Set<UserPermission> permissions = new HashSet<>();
 
     @Override
     public boolean equals(Object obj) {
