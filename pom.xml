@@ -91,7 +91,15 @@
         <dependency>
     <groupId>io.quarkus</groupId>
     <artifactId>quarkus-smallrye-jwt</artifactId>
+    
 </dependency>
+
+<!-- https://mvnrepository.com/artifact/io.quarkus/quarkus-elytron-security -->
+<dependency>
+    <groupId>io.quarkus</groupId>
+    <artifactId>quarkus-elytron-security</artifactId>
+</dependency>
+
 
         <!-- https://mvnrepository.com/artifact/io.quarkus/quarkus-smallrye-jwt 
 <dependency>

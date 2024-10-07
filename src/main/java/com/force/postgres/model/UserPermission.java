@@ -2,6 +2,9 @@ package com.force.postgres.model;
 
 import java.util.UUID;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import java.io.Serializable;
 
 import jakarta.persistence.Column;
@@ -30,6 +33,7 @@ public class UserPermission {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "urp_pk_user_uuid", insertable = false, updatable = false)
+    @JsonIgnore
     private User user;
 
     @Embeddable

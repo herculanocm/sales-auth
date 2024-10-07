@@ -14,6 +14,7 @@ import com.force.util.UuidUtil;
 
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import io.quarkus.panache.common.Page;
+import io.quarkus.security.identity.SecurityIdentity;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
@@ -25,9 +26,15 @@ public class CompanyRuleService {
     
     private final CompanyRuleRepository companyRuleRepository;
 
+    private final SecurityIdentity securityIdentity;
+
     @Inject
-    public CompanyRuleService(CompanyRuleRepository companyRuleRepository) {
+    public CompanyRuleService(
+        CompanyRuleRepository companyRuleRepository,
+        SecurityIdentity securityIdentity
+        ) {
         this.companyRuleRepository = companyRuleRepository;
+        this.securityIdentity = securityIdentity;
     }
 
     public List<CompanyRule> getAllCompanyRules() {
@@ -41,9 +48,9 @@ public class CompanyRuleService {
  
             companyRule.setId(UuidUtil.generateUuidV7());
             companyRule.setDtInclude(LocalDateTime.now());
-            companyRule.setUserInclude("user");
+            companyRule.setUserInclude(securityIdentity.getPrincipal().getName());
             companyRule.setDtUpdate(LocalDateTime.now());
-            companyRule.setUserUpdate("user");
+            companyRule.setUserUpdate(securityIdentity.getPrincipal().getName());
             companyRuleRepository.persist(companyRule);
             return companyRule;
         
@@ -74,7 +81,7 @@ public class CompanyRuleService {
             updatedCompanyRule.setEnabled(companyRule.getEnabled());
 
             updatedCompanyRule.setDtUpdate(LocalDateTime.now());
-            updatedCompanyRule.setUserUpdate("user");
+            updatedCompanyRule.setUserUpdate(securityIdentity.getPrincipal().getName());
             companyRuleRepository.persist(updatedCompanyRule);
             return Optional.of(updatedCompanyRule);
         }

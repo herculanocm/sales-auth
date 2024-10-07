@@ -1,6 +1,10 @@
 package com.force.postgres.model;
 
 import java.util.UUID;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import java.io.Serializable;
 
 import jakarta.persistence.Column;
@@ -29,6 +33,7 @@ public class UserRole {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "urr_pk_user_uuid", insertable = false, updatable = false)
+    @JsonIgnore
     private User user;
 
     @Embeddable
@@ -74,7 +79,7 @@ public class UserRole {
             return result;
         }
 
-        
+
     }
 
     @Override

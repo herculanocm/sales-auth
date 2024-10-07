@@ -50,7 +50,7 @@ ALTER TABLE master.group_user ADD CONSTRAINT group_user_company_fk FOREIGN KEY (
         usr_tx_first_name varchar(100) not null,
         usr_tx_image_url varchar(255),
         usr_tx_last_name varchar(200),
-        usr_tx_password_hash varchar(255) not null,
+        usr_tx_password_hash varchar(255),
         usr_tx_reset_key varchar(255),
         usr_tx_user_include varchar(255) not null,
         usr_tx_user_update varchar(255) not null,

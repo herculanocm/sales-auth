@@ -57,9 +57,9 @@ public class GroupUserService {
         }
 
         groupUser.setDtInclude(LocalDateTime.now());
-        groupUser.setUserInclude("user");
+        groupUser.setUserInclude(securityIdentity.getPrincipal().getName());
         groupUser.setDtUpdate(LocalDateTime.now());
-        groupUser.setUserUpdate("user");
+        groupUser.setUserUpdate(securityIdentity.getPrincipal().getName());
 
         groupUserReporitory.persist(groupUser);
         return groupUser;
@@ -99,12 +99,14 @@ public class GroupUserService {
         Optional<GroupUser> existingGroupUser = groupUserReporitory.findByIdOptional(groupUser.getId());
         if (existingGroupUser.isPresent()) {
             existingGroupUser.get().setDtUpdate(LocalDateTime.now());
-            existingGroupUser.get().setUserUpdate("user");
+            existingGroupUser.get().setUserUpdate(securityIdentity.getPrincipal().getName());
 
             existingGroupUser.get().setName(groupUser.getName());
             existingGroupUser.get().setDescription(groupUser.getDescription());
             existingGroupUser.get().setEnabled(groupUser.getEnabled());
             existingGroupUser.get().setCompanyRule(groupUser.getCompanyRule());
+
+
 
     
             groupUserReporitory.persist(existingGroupUser.get());
