@@ -9,7 +9,6 @@ import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.Arrays;
 import java.util.Base64;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -149,25 +148,51 @@ public class JwtIdentityProvider implements IdentityProvider<TokenAuthentication
 
             // Extract permissions from the JWT
             if (rolesFromJwt) {
-                Optional<String> permissionsClaim = Optional.ofNullable(claims.get("permissions", String.class));
+
+                @SuppressWarnings("unchecked")
+                Optional<java.util.ArrayList<String>> rolesClaim = Optional.ofNullable((java.util.ArrayList<String>) claims.get("roles"));
+                Set<String> roles = new HashSet<>();
+                if (rolesClaim.isPresent() && !rolesClaim.get().isEmpty()) {
+                    // Assuming roles are stored as a comma-separated string
+                    roles = rolesClaim.get().stream()
+                            .map(String::trim)
+                            .collect(Collectors.toSet());
+                    if (roles.size() > 0) {
+                        jwtStatusFilter.setRoles(roles);
+                    }
+                } else {
+                    jwtStatusFilter.setRoles(roles);
+                }
+
+
+                @SuppressWarnings("unchecked")
+                Optional<java.util.ArrayList<String>> permissionsClaim = Optional.ofNullable((java.util.ArrayList<String>) claims.get("permissions"));
                 Set<String> permissions = new HashSet<>();
                 if (permissionsClaim.isPresent() && !permissionsClaim.get().isEmpty()) {
                     // Assuming permissions are stored as a comma-separated string
-                    permissions = Arrays.stream(permissionsClaim.get().split(","))
+                    permissions = permissionsClaim.get().stream()
                             .map(String::trim)
                             .collect(Collectors.toSet());
                     if (permissions.size() > 0) {
                         jwtStatusFilter.setPermissions(permissions);
                     }
+                } else {
+                    jwtStatusFilter.setPermissions(permissions);
                 }
+
             } else {
                 Set<String> permissions = jwtService.getPermissions(optCompanyId.get(), userId.get());
                 if (permissions.size() > 0) {
                     jwtStatusFilter.setPermissions(permissions);
                 }
+
+                Set<String> roles = jwtService.getRoles(optCompanyId.get(), userId.get());
+                if (roles.size() > 0) {
+                    jwtStatusFilter.setRoles(roles);
+                }
             }
 
-            jwtStatusFilter.setRoles(new HashSet<>(Arrays.asList("ROLE_USER", "ROLE_ADMIN")));
+           
 
             // Set valid status and claims
             jwtStatusFilter.setUserId(userId.get());

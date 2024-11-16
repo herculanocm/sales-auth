@@ -2,11 +2,8 @@ package com.force.controller;
 
 import org.jboss.logging.Logger;
 
-import com.force.DTO.CompanyRuleDTO;
-import com.force.DTO.GroupUserDTO;
 import com.force.DTO.RegisterUserDTO;
 import com.force.DTO.ResponseError;
-import com.force.postgres.model.CompanyRule;
 import com.force.postgres.model.User;
 import com.force.security.PermissionsAllowed;
 import com.force.service.CompanyRuleService;
@@ -22,18 +19,14 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.Optional;
 
-import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.ws.rs.Consumes;
-import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.DefaultValue;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
-import jakarta.ws.rs.PUT;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
@@ -61,6 +54,7 @@ public class UserController {
     @GET
     @Path("/users/search")
     @Produces(MediaType.APPLICATION_JSON)
+    @PermissionsAllowed(roles = {"ROLE_ADMIN_SYSTEM"})
     //@PermissionsAllowed(roles = {"ROLE_ADMIN_SYSTEM", "ROLE_ADMIN_COMPANY"})
     public PagedResult<User> searchUsers(
         @QueryParam("page") @DefaultValue("" + DefaultValuesConstants.DEFAULT_PAGE) int page,
@@ -86,7 +80,7 @@ public class UserController {
     @GET
     @Path("/users/{id}")
     @Produces(MediaType.APPLICATION_JSON)
-    //@PermissionsAllowed(roles = {"ROLE_ADMIN_SYSTEM", "ROLE_ADMIN_COMPANY"})
+    @PermissionsAllowed(roles = {"ROLE_ADMIN_SYSTEM"})
     public Response getUserById(
     @PathParam("id") @ValidUUID(message = "This field must be a valid UUID") String id
     ) {
@@ -102,7 +96,7 @@ public class UserController {
     @Path("/users")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
-    //@PermissionsAllowed(roles = {"ROLE_ADMIN_SYSTEM", "ROLE_ADMIN_COMPANY"})
+    @PermissionsAllowed(roles = {"ROLE_ADMIN_SYSTEM"})
     public Response registerUser(@NotNull @Valid RegisterUserDTO user) {
         logger.info("Registering user: " + user);
 

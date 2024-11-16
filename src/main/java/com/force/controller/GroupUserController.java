@@ -77,6 +77,7 @@ public class GroupUserController {
     @GET
     @Path("/group-users")
     @Produces(MediaType.APPLICATION_JSON)
+    @PermissionsAllowed(roles = {"ROLE_USER"})
     public Response getAllGroupUsers() {
         logger.info("Getting all group users");
         List<GroupUser> groupUsers = groupUserService.getAllGroupUsers();
@@ -86,6 +87,7 @@ public class GroupUserController {
 
     @POST
     @Path("/group-users")
+    @PermissionsAllowed(roles = {"ROLE_ADMIN_SYSTEM"})
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
     public Response saveGroupUser(@NotNull @Valid GroupUserDTO groupUserDTO) {
@@ -108,6 +110,7 @@ public class GroupUserController {
     @Path("/group-users/{id}")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
+    @PermissionsAllowed(roles = {"ROLE_ADMIN_SYSTEM"})
     public Response updateGroupUser(
         @PathParam("id") @ValidUUID(message = "This field must be a valid UUID") String id, 
         @NotNull @Valid GroupUserDTO groupUserDTO) {
@@ -138,6 +141,7 @@ public class GroupUserController {
 
     @DELETE
     @Path("/group-users/{id}")
+    @PermissionsAllowed(roles = {"ROLE_ADMIN_SYSTEM"})
     public Response deleteGroupUser(@PathParam("id") String id) {
         logger.info("Deleting group user with id: " + id);
 

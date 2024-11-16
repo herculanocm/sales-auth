@@ -91,4 +91,8 @@ XAAUty7czxj7VOQrs29rAOe0HlrIDw==
     public Set<String> getPermissions(String companyId, String userId) {
         return new HashSet<>(Arrays.asList("read", "write"));
     }
+
+    public Set<String> getRoles(String companyId, String userId) {
+        return new HashSet<>(Arrays.asList("ROLE_USER"));
+    }
 }

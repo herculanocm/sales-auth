@@ -18,7 +18,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.Optional;
 
-import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Valid;
@@ -51,7 +50,7 @@ public class CompanyRuleController {
     @Path("/company-rules")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
-    @RolesAllowed("ROLE_ADMIN_SYSTEM")
+    @PermissionsAllowed(roles = {"ROLE_ADMIN_SYSTEM"})
     public Response saveCompanyRule(@NotNull @Valid CompanyRuleDTO companyRuleDTO) {
         logger.info("Saving CompanyRuleDTO: " + companyRuleDTO);
 
@@ -75,7 +74,7 @@ public class CompanyRuleController {
     @GET
     @Path("/company-rules")
     @Produces(MediaType.APPLICATION_JSON)
-    @RolesAllowed("ROLE_ADMIN_SYSTEM, ROLE_ADMIN_COMPANY")
+    @PermissionsAllowed(roles = {"ROLE_ADMIN", "ROLE_ADMIN_SYSTEM", "ROLE_ADMIN_COMPANY"})
     public Response getAllCompanyRules() {
         logger.info("Getting all company rules");
         return Response.ok(companyRuleService.getAllCompanyRules()).build();
@@ -83,7 +82,7 @@ public class CompanyRuleController {
 
     @GET
     @Path("/company-rules/{id}")
-    @RolesAllowed("ROLE_ADMIN_SYSTEM, ROLE_ADMIN_COMPANY, ROLE_USER")
+    @PermissionsAllowed(roles = {"ROLE_ADMIN", "ROLE_ADMIN_SYSTEM", "ROLE_ADMIN_COMPANY", "ROLE_USER"})
     @Produces(MediaType.APPLICATION_JSON)
     public Response getCompanyRuleById(@PathParam("id") String id) {
         logger.info("Getting company rule by id: " + id);
@@ -96,7 +95,7 @@ public class CompanyRuleController {
     @Path("/company-rules/{id}")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
-    @RolesAllowed("ROLE_ADMIN_SYSTEM")
+    @PermissionsAllowed(roles = {"ROLE_ADMIN_SYSTEM"})
     public Response updateCompanyRule(
             @PathParam("id") @ValidUUID(message = "This field must be a valid UUID") String id,
             @NotNull @Valid CompanyRuleDTO companyRuleDTO) {
@@ -130,7 +129,7 @@ public class CompanyRuleController {
 
     @DELETE
     @Path("/company-rules/{id}")
-    @RolesAllowed("ROLE_ADMIN_SYSTEM")
+    @PermissionsAllowed(roles = {"ROLE_ADMIN_SYSTEM"})
     public Response deleteCompanyRule(@PathParam("id") String id) {
         logger.info("Deleting company rule with id: " + id);
 
@@ -164,7 +163,7 @@ public class CompanyRuleController {
     @GET
     @Path("/company-rules/search")
     @Produces(MediaType.APPLICATION_JSON)
-    @PermissionsAllowed(roles = { "ROLE_USER" })
+    @PermissionsAllowed(roles = {"ROLE_USER"})
     public Response getCompanyRuleByQueryParams(@DefaultValue("0") @QueryParam("page") int page,
             @DefaultValue("10") @QueryParam("size") int size,@Valid @ValidUUID @QueryParam("id") String id,
             @QueryParam("name") Optional<String> name,
