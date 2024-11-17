@@ -3,8 +3,10 @@ package com.force.controller;
 import org.jboss.logging.Logger;
 
 import com.force.DTO.CompanyRuleDTO;
+import com.force.DTO.CompanyRuleKeyDTO;
 import com.force.DTO.ResponseError;
 import com.force.postgres.model.CompanyRule;
+import com.force.postgres.model.CompanyRuleKey;
 import com.force.security.PermissionsAllowed;
 import com.force.service.CompanyRuleService;
 import com.force.util.PagedResult;
@@ -176,6 +178,127 @@ public class CompanyRuleController {
                 enabled);
 
         return Response.ok(pagedResult).build();
+    }
+
+    ///////////////////////////////////////////////////////////////////
+    @DELETE
+    @Path("/company-rule-keys/{id}")
+    @PermissionsAllowed(roles = {"ROLE_ADMIN_SYSTEM"})
+    public Response deleteCompanyRuleKey(@PathParam("id") String id) {
+        logger.info("Deleting company rule key with id: " + id);
+
+        if (Optional.ofNullable(id).isEmpty()) {
+            return Response.status(Response.Status.BAD_REQUEST).entity(new ResponseError("Id is required", null))
+                    .build();
+        }
+
+        Optional<CompanyRuleKey> companyRuleKey = companyRuleService.getCompanyRuleKey(UUID.fromString(id));
+
+        if (companyRuleKey.isEmpty()) {
+            return Response.status(Response.Status.NOT_FOUND).entity(new ResponseError("Company rule key not found", null))
+                    .build();
+        }
+
+        try {
+            companyRuleService.deleteCompanyRuleKey(UUID.fromString(id));
+            return Response.ok().build();
+        } catch (Throwable t) {
+            logger.error("Error deleting company rule key with id: " + id, t);
+            if (t.getMessage().contains("violates foreign key constraint")) {
+                return Response.status(Response.Status.CONFLICT)
+                        .entity(new ResponseError("Company rule key is being used", null)).build();
+            }
+
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity(new ResponseError("Error deleting company rule key", null)).build();
+        }
+    }
+
+    @POST
+    @Path("/company-rule-keys")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
+    @PermissionsAllowed(roles = {"ROLE_ADMIN_SYSTEM"})
+    public Response saveCompanyRuleKey(@NotNull @Valid CompanyRuleKeyDTO companyRuleKeyDTO) {
+        logger.info("Saving CompanyRuleKeyDTO: " + companyRuleKeyDTO);
+
+        Set<ConstraintViolation<CompanyRuleKeyDTO>> violations = validator.validate(companyRuleKeyDTO);
+        if (!violations.isEmpty()) {
+            return ResponseError.createFromValidation(violations)
+                    .withStatusCode(ResponseError.UNPROCESSABLE_ENTITY_STATUS);
+        }
+
+        if (!companyRuleService.existsCompanyRule(UUID.fromString(companyRuleKeyDTO.getCompanyRuleId()))) {
+            return Response.status(Response.Status.CONFLICT)
+                    .entity(new ResponseError("Company does not exists", null)).build();
+        }
+
+        CompanyRuleKey companyRuleKey = companyRuleKeyDTO.toEntity();
+        companyRuleService.saveCompanyRuleKey(companyRuleKey);
+
+        return Response.ok(CompanyRuleKeyDTO.fromEntity(companyRuleKey)).build();
+    }
+
+    @PUT
+    @Path("/company-rule-keys")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
+    @PermissionsAllowed(roles = {"ROLE_ADMIN_SYSTEM"})
+    public Response updateCompanyRuleKey(@NotNull @Valid CompanyRuleKeyDTO companyRuleKeyDTO) {
+        logger.info("Saving CompanyRuleKeyDTO: " + companyRuleKeyDTO);
+
+        Set<ConstraintViolation<CompanyRuleKeyDTO>> violations = validator.validate(companyRuleKeyDTO);
+        if (!violations.isEmpty()) {
+            return ResponseError.createFromValidation(violations)
+                    .withStatusCode(ResponseError.UNPROCESSABLE_ENTITY_STATUS);
+        }
+
+        if (!companyRuleService.existsCompanyRule(UUID.fromString(companyRuleKeyDTO.getCompanyRuleId()))) {
+            return Response.status(Response.Status.CONFLICT)
+                    .entity(new ResponseError("Company does not exists", null)).build();
+        }
+
+        CompanyRuleKey companyRuleKey = companyRuleKeyDTO.toEntity();
+        companyRuleService.saveCompanyRuleKey(companyRuleKey);
+
+        return Response.ok(CompanyRuleKeyDTO.fromEntity(companyRuleKey)).build();
+    }
+
+    @PUT
+    @Path("/company-rule-keys/{id}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
+    @PermissionsAllowed(roles = {"ROLE_ADMIN_SYSTEM"})
+    public Response updateCompanyRuleKey(
+            @PathParam("id") @ValidUUID(message = "This field must be a valid UUID") String id,
+            @NotNull @Valid CompanyRuleKeyDTO companyRuleKeyDTO) {
+        logger.info("Updating company rule key with id: " + id);
+
+        Set<ConstraintViolation<CompanyRuleKeyDTO>> violations = validator.validate(companyRuleKeyDTO);
+        if (!violations.isEmpty()) {
+            return ResponseError.createFromValidation(violations)
+                    .withStatusCode(ResponseError.UNPROCESSABLE_ENTITY_STATUS);
+        }
+
+        if (!companyRuleService.existsCompanyRule(UUID.fromString(companyRuleKeyDTO.getCompanyRuleId()))) {
+            return Response.status(Response.Status.NOT_FOUND)
+                    .entity(new ResponseError("Company not found with this ID", null)).build();
+        }
+
+        if (companyRuleService.existsCompanyRuleKeyByCompanyUUIDDiff(UUID.fromString(companyRuleKeyDTO.getCompanyRuleId()), UUID.fromString(id))) {
+            return Response.status(Response.Status.CONFLICT)
+                    .entity(new ResponseError("Exists another row with this company", null)).build();
+        }
+
+        CompanyRuleKey companyRuleKey = companyRuleKeyDTO.toEntity();
+        companyRuleKey.setId(UUID.fromString(id));
+
+        Optional<CompanyRuleKey> optCompanykey = companyRuleService.updateCompanyRuleKey(companyRuleKey);
+        if (optCompanykey.isEmpty()) {
+            return Response.status(Response.Status.NOT_FOUND).build();
+        }
+
+        return Response.ok(CompanyRuleKeyDTO.fromEntity(companyRuleKey)).build();
     }
 
 }

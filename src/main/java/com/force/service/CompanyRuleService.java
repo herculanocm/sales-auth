@@ -7,7 +7,8 @@ import java.util.UUID;
 import java.time.LocalDateTime;
 
 import com.force.postgres.model.CompanyRule;
-
+import com.force.postgres.model.CompanyRuleKey;
+import com.force.postgres.repository.CompanyRuleKeyRepository;
 import com.force.postgres.repository.CompanyRuleRepository;
 import com.force.util.PagedResult;
 import com.force.util.UuidUtil;
@@ -28,13 +29,17 @@ public class CompanyRuleService {
 
     private final SecurityIdentity securityIdentity;
 
+    private final CompanyRuleKeyRepository companyRuleKeyRepository;
+
     @Inject
     public CompanyRuleService(
         CompanyRuleRepository companyRuleRepository,
-        SecurityIdentity securityIdentity
+        SecurityIdentity securityIdentity,
+        CompanyRuleKeyRepository companyRuleKeyRepository
         ) {
         this.companyRuleRepository = companyRuleRepository;
         this.securityIdentity = securityIdentity;
+        this.companyRuleKeyRepository = companyRuleKeyRepository;
     }
 
     public List<CompanyRule> getAllCompanyRules() {
@@ -56,6 +61,40 @@ public class CompanyRuleService {
         
     }
 
+    @Transactional
+    public CompanyRuleKey saveCompanyRuleKey(CompanyRuleKey companyRuleKey) {
+        logger.info("Saving company rule key: " + companyRuleKey);
+
+        companyRuleKey.setId(UuidUtil.generateUuidV7());
+        companyRuleKey.setDtInclude(LocalDateTime.now());
+        companyRuleKey.setUserInclude(securityIdentity.getPrincipal().getName());
+        companyRuleKey.setDtUpdate(LocalDateTime.now());
+        companyRuleKey.setUserUpdate(securityIdentity.getPrincipal().getName());
+
+        if (!Optional.ofNullable(companyRuleKey.getCompanyRule()).isPresent()) {
+            // throws an exception if the company rule does not exist
+            throw new IllegalArgumentException("Company rule does not exist");
+        }
+
+        companyRuleKeyRepository.persist(companyRuleKey);
+        return companyRuleKey;
+    }
+
+    public Optional<CompanyRuleKey> getCompanyRuleKey(UUID id) {
+        logger.info("Getting company rule key with id: " + id);
+        return companyRuleKeyRepository.findByIdOptional(id);
+    }
+
+    public Optional<CompanyRuleKey> getCompanyRuleKeysByCompanyRuleId(UUID companyRuleId) {
+        logger.info("Getting company rule keys by company rule id: " + companyRuleId);
+        return companyRuleKeyRepository.findByCompanyRuleUUID(companyRuleId);
+    }
+
+    public Boolean existsCompanyRuleKeyByCompanyUUID(UUID companyRuleUuid) {
+        logger.info("Checking if company rule key exists with company rule uuid: " + companyRuleUuid);
+        return companyRuleKeyRepository.findByCompanyRuleUUID(companyRuleUuid).isPresent();
+    }
+
     public Boolean existsCompanyRule(UUID id) {
         logger.info("Checking if company rule exists with id: " + id);
         return companyRuleRepository.findByIdOptional(id).isPresent();
@@ -69,6 +108,38 @@ public class CompanyRuleService {
     public Boolean existsCompanyRuleByCgcDifId(String cgc, UUID id) {
         logger.info("Checking if company rule exists with cgc: " + cgc);
         return companyRuleRepository.existsCompanyRuleByCgcDifId(cgc, id).isPresent();
+    }
+
+    public Boolean existsCompanyRuleKeyByCompanyUUIDDiff(UUID companyId, UUID id) {
+        logger.info("Checking if company rule key exists with company rule uuid: " + companyId);
+        return companyRuleKeyRepository.existsCompanyRuleKeyByCompanyUUIDDiff(companyId, id).isPresent();
+    }
+
+    @Transactional
+    public Optional<CompanyRuleKey> updateCompanyRuleKey(CompanyRuleKey companyRuleKey) {
+        Optional<CompanyRuleKey> existingCompanyRuleKey = companyRuleKeyRepository.findByIdOptional(companyRuleKey.getId());
+
+        if (!Optional.ofNullable(companyRuleKey.getCompanyRule()).isPresent()) {
+            return Optional.empty();
+        }
+
+        if (existingCompanyRuleKey.isPresent()) {
+            CompanyRuleKey updatedCompanyRulekey = existingCompanyRuleKey.get();
+
+            updatedCompanyRulekey.setPublicKey(companyRuleKey.getPublicKey());
+            updatedCompanyRulekey.setPrivateKey(companyRuleKey.getPrivateKey());
+            updatedCompanyRulekey.setTipoKey(companyRuleKey.getTipoKey());
+
+            updatedCompanyRulekey.setCompanyRule(companyRuleKey.getCompanyRule());
+
+
+            updatedCompanyRulekey.setDtUpdate(LocalDateTime.now());
+            updatedCompanyRulekey.setUserUpdate(securityIdentity.getPrincipal().getName());
+            companyRuleKeyRepository.persist(updatedCompanyRulekey);
+            return Optional.of(updatedCompanyRulekey);
+        }
+
+        return Optional.empty();
     }
 
     @Transactional
@@ -93,6 +164,12 @@ public class CompanyRuleService {
     public void deleteCompanyRule(UUID id) {
         logger.info("Deleting company rule with id: " + id);
         companyRuleRepository.deleteById(id);
+    }
+
+    @Transactional
+    public void deleteCompanyRuleKey(UUID id) {
+        logger.info("Deleting company rule key with id: " + id);
+        companyRuleKeyRepository.deleteById(id);
     }
 
     public Optional<CompanyRule> getCompanyRuleById(UUID id) {
