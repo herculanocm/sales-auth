@@ -40,7 +40,9 @@ public class JWTFilter implements ContainerRequestFilter {
         String path = requestContext.getUriInfo().getPath();
         logger.debug("Request URI: " + path);
 
-        if ("/api/v1/authenticate".equals(path)) {
+        if (
+            "/api/v1/authenticate".equals(path)
+            ) {
             return;
         }
 
