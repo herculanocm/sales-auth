@@ -21,7 +21,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @Entity(name = "GroupUser")
 @Table(name = "group_user")
-public class GroupUser {
+public class GroupUser implements java.io.Serializable {
 
     @Id
     @Column(name = "gru_pk_uuid", updatable = false, nullable = false)

@@ -30,7 +30,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @Entity(name = "User")
 @Table(name = "sales_user")
-public class User {
+public class User implements java.io.Serializable {
     
     @Id
     @Column(name = "usr_pk_uuid", updatable = false, nullable = false)

@@ -26,7 +26,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @Entity(name = "UserPermission")
 @Table(name = "sales_user_permission")
-public class UserPermission {
+public class UserPermission implements java.io.Serializable {
     
     @EmbeddedId
     private UserPermissionId id;

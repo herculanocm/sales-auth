@@ -18,7 +18,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @Entity(name = "CompanyRule")
 @Table(name = "company_rule")
-public class CompanyRule {
+public class CompanyRule implements java.io.Serializable {
     
     @Id
     @Column(name = "cpr_pk_uuid", updatable = false, nullable = false)
@@ -73,6 +73,4 @@ public class CompanyRule {
         result = prime * result + ((id == null) ? 0 : id.hashCode());
         return result;
     }
-
-    
 }

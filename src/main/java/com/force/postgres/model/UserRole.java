@@ -26,7 +26,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @Entity(name = "UserRole")
 @Table(name = "sales_user_role")
-public class UserRole {
+public class UserRole implements java.io.Serializable {
     
     @EmbeddedId
     private UserRoleId id;

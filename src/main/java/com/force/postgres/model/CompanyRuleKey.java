@@ -18,7 +18,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @Entity(name = "CompanyRuleKey")
 @Table(name = "company_rule_key")
-public class CompanyRuleKey {
+public class CompanyRuleKey implements java.io.Serializable {
 
     @Id
     @Column(name = "crk_pk_uuid", updatable = false, nullable = false)
