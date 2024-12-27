@@ -27,6 +27,7 @@ import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DefaultValue;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
+import jakarta.ws.rs.PUT;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
@@ -98,6 +99,40 @@ public class UserController {
     @Consumes(MediaType.APPLICATION_JSON)
     @PermissionsAllowed(roles = {"ROLE_ADMIN_SYSTEM"})
     public Response registerUser(@NotNull @Valid RegisterUserDTO user) {
+        logger.info("Registering user: " + user);
+
+        Set<ConstraintViolation<RegisterUserDTO>> violations = validator.validate(user);
+        if (!violations.isEmpty()) {
+            return ResponseError.createFromValidation(violations)
+                    .withStatusCode(ResponseError.UNPROCESSABLE_ENTITY_STATUS);
+        }
+
+        if (userService.getUserByEmail(user.getEmail()).isPresent()) {
+            return Response
+            .status(Response.Status.CONFLICT)
+            .entity("User with this email already exists")
+            .type(MediaType.TEXT_PLAIN)
+            .build();
+        }
+
+        if (!companyRuleService.existsCompanyRule(UUID.fromString(user.getCompanyRuleId()))) {
+            return Response
+            .status(Response.Status.NOT_FOUND)
+            .entity("CompanyRule not found")
+            .type(MediaType.TEXT_PLAIN)
+            .build();
+        }
+
+        RegisterUserDTO userRegistered = userService.registerUser(user);
+        return Response.ok(userRegistered).build();
+    }
+
+    @PUT
+    @Path("/users")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
+    @PermissionsAllowed(roles = {"ROLE_ADMIN_SYSTEM"})
+    public Response updateUser(@NotNull @Valid RegisterUserDTO user) {
         logger.info("Registering user: " + user);
 
         Set<ConstraintViolation<RegisterUserDTO>> violations = validator.validate(user);

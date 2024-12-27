@@ -2,6 +2,7 @@ package com.force.service;
 
 import java.util.UUID;
 import java.util.Optional;
+import java.util.Random;
 import java.util.List;
 import java.time.LocalDateTime;
 
@@ -29,14 +30,17 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final SecurityIdentity securityIdentity;
+    private final EmailService emailService;
 
     @Inject
     public UserService(
         UserRepository userRepository,
-        SecurityIdentity securityIdentity
+        SecurityIdentity securityIdentity,
+        EmailService emailService
         ) {
         this.userRepository = userRepository;
         this.securityIdentity = securityIdentity;
+        this.emailService = emailService;
     }
 
     public Optional<User> getUserByEmail(String email) {
@@ -82,7 +86,7 @@ public class UserService {
         user.setActivated(false);
         user.setEnabled(false);
         user.setEmail(user.getEmail().toLowerCase().trim());
-        user.setActivationKey(UUID.randomUUID().toString());
+        user.setActivationKey(generateRandomCode());
 
         if (password.isPresent()) {
             user.setPasswordHash(BcryptUtil.bcryptHash(password.get()));
@@ -90,6 +94,19 @@ public class UserService {
         
         userRepository.persist(user);
         return id;
+    }
+
+    public static String generateRandomCode() {
+        Random random = new Random();
+        StringBuilder code = new StringBuilder();
+
+        // Generate 8 random digits
+        for (int i = 0; i < 6; i++) {
+            int digit = random.nextInt(10); // Generates a random digit between 0 and 5
+            code.append(digit);
+        }
+
+        return code.toString();
     }
 
     
@@ -106,6 +123,26 @@ public class UserService {
         UUID id = registerUser(newUser, Optional.empty());
 
         user.setId(id);
+
+
+        // sending email 
+        String subject = "Registro no sistema Sales - " + user.getFirstName();
+        String htmlContent = """
+        <h1>Bem vindo ao sistema</h1>
+        <p>Você foi registrado com sucesso como $2</p>
+        <p>Utilize o código <strong>$1</strong> para registrar/alterar sua senha</p>
+        """;
+
+        htmlContent = htmlContent.replace("$1", newUser.getActivationKey());
+        htmlContent = htmlContent.replace("$2", newUser.getEmail());
+
+        try {
+            emailService.sendEmailSMTP(user.getEmail(), subject, htmlContent);
+        } catch (Exception e) {
+            logger.error("Error sending email", e);
+        }
+
+
         return user;
     }
 
